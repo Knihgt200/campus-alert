@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="日程提醒">
+<meta name="theme-color" content="#2563eb">
+<title>校园日程提醒</title>
+<link rel="manifest" href="./manifest.json">
+<style>
+:root{--primary:#2563eb;--primary-dark:#1d4ed8;--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--danger:#dc2626;--danger-bg:#fee2e2;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.5;padding:12px 12px calc(24px + env(safe-area-inset-bottom));min-height:100dvh;}
+.app{max-width:600px;margin:0 auto;}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;}
+h1{font-size:19px;margin:0;line-height:1.3;}
+.sub{font-size:12px;color:var(--muted);margin-top:3px;}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:999px;background:#e0e7ff;color:#3730a3;margin-left:4px;vertical-align:middle;}
+.top-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(15,23,42,.07);margin-bottom:12px;}
+details.add-panel{padding:0;overflow:hidden;}
+details.add-panel summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px;color:var(--primary);}
+details.add-panel summary::-webkit-details-marker{display:none;}
+details.add-panel summary .plus{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:18px;line-height:1;}
+details.add-panel[open] summary{border-bottom:1px solid var(--border);}
+.form{padding:14px 16px 16px;}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.field{flex:1 1 140px;display:flex;flex-direction:column;gap:5px;min-width:0;}
+label{font-size:12px;color:var(--muted);}
+input,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:16px;font-family:inherit;background:#fff;color:var(--text);outline:none;-webkit-appearance:none;appearance:none;min-height:46px;}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
+input:focus,select:focus{border-color:var(--primary);}
+button{font-family:inherit;font-size:14px;border-radius:10px;border:none;cursor:pointer;transition:.15s;}
+.btn-primary{background:var(--primary);color:#fff;padding:13px 16px;font-size:15px;font-weight:600;width:100%;}
+.btn-primary:active{background:var(--primary-dark);}
+.btn-ghost{background:#fff;border:1px solid var(--border);color:var(--text);padding:8px 12px;font-size:13px;white-space:nowrap;}
+.btn-ghost:active{background:#f8fafc;}
+.btn-sm{padding:7px 10px;font-size:12px;border-radius:8px;min-height:34px;}
+.btn-danger{background:var(--danger-bg);color:var(--danger);}
+.section-title{font-size:13px;font-weight:600;color:var(--muted);margin:16px 4px 8px;}
+.item{background:#fff;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;box-shadow:0 1px 2px rgba(15,23,42,.05);}
+.item.done{opacity:.55;}
+.item.done .title{text-decoration:line-through;}
+.emoji{font-size:20px;line-height:1.4;flex-shrink:0;}
+.body{flex:1;min-width:0;}
+.title{font-size:15px;font-weight:600;margin-bottom:2px;word-break:break-word;}
+.meta{font-size:12px;color:var(--muted);line-height:1.6;word-break:break-word;}
+.actions{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:20px 16px;}
+.hint{font-size:12px;color:var(--muted);line-height:1.8;margin-top:20px;padding:0 4px;}
+#toasts{position:fixed;top:12px;left:12px;right:12px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{background:#0f172a;color:#fff;border-radius:12px;padding:13px 15px;box-shadow:0 8px 24px rgba(15,23,42,.3);animation:slideDown .25s ease;pointer-events:auto;}
+.toast .t-title{font-weight:600;font-size:14px;margin-bottom:3px;}
+.toast .t-body{font-size:12px;color:#cbd5e1;}
+.toast .t-close{margin-top:8px;font-size:12px;color:#93c5fd;cursor:pointer;}
+@keyframes slideDown{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.ios-tip{display:none;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:12px;padding:10px 12px;border-radius:10px;margin-bottom:12px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>校园日程提醒 <span class="badge">手机版</span></h1>
+      <div class="sub">到点自动弹提醒 · 数据存本机</div>
+    </div>
+    <div class="top-actions">
+      <button class="btn-ghost" id="btnPerm">开启通知</button>
+      <button class="btn-ghost" id="btnTest">测试提醒</button>
+    </div>
+  </header>
+
+  <div class="ios-tip" id="iosTip">
+    想让它像 App 一样用？点 Safari 底部「分享」→「添加到主屏幕」，再从主屏幕打开。
+  </div>
+
+  <details class="card add-panel" id="addPanel">
+    <summary><span class="plus">+</span> 添加日程</summary>
+    <div class="form">
+      <div class="form-row">
+        <div class="field" style="flex:2 1 200px;">
+          <label>事项标题</label>
+          <input id="f-title" placeholder="例如：社团例会" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>分类</label>
+          <select id="f-category">
+            <option>开会</option><option>社团</option><option>作业DDL</option>
+            <option>个人</option><option>其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>开始时间</label>
+          <input type="datetime-local" id="f-time">
+        </div>
+        <div class="field">
+          <label>提前提醒</label>
+          <select id="f-remind">
+            <option value="5">提前 5 分钟</option>
+            <option value="10" selected>提前 10 分钟</option>
+            <option value="30">提前 30 分钟</option>
+            <option value="60">提前 1 小时</option>
+            <option value="120">提前 2 小时</option>
+            <option value="1440">提前 1 天</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>地点（可选）</label>
+          <input id="f-location" placeholder="例如：教学楼 A101" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>备注（可选）</label>
+          <input id="f-note" placeholder="补充说明" autocomplete="off">
+        </div>
+      </div>
+      <button class="btn-primary" id="btnAdd">添加日程</button>
+    </div>
+  </details>
+
+  <div id="list"></div>
+
+  <p class="hint">
+    使用提示：<br>
+    · 数据只存在你手机浏览器里，换浏览器或清缓存会丢。<br>
+    · 提醒需要页面保持打开（从主屏幕启动后别完全关掉）。<br>
+    · 首次使用点右上角「开启通知」并允许。<br>
+    · 想真正后台提醒，得用原生 App，网页版做不到系统级后台闹钟。
+  </p>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+const STORAGE_KEY = 'campus_alert_items_v1';
+const EMOJI = {'开会':'📣','社团':'👥','作业DDL':'📚','个人':'⭐','其他':'📌'};
+let items = [];
+let audioCtx = null;
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,'0');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+if (isIOS && !isStandalone) $('iosTip').style.display = 'block';
+
+function initDefaultTime(){
+  const d = new Date(Date.now() + 60*60*1000);
+  d.setSeconds(0,0);
+  $('f-time').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function load(){
+  try { items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ items = []; }
+  const now = Date.now();
+  items.forEach(it => { if (it.startTime <= now) it.reminded = true; });
+  save();
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+function fmt(ts){
+  const d = new Date(ts);
+  const week = ['日','一','二','三','四','五','六'][d.getDay()];
+  return `${d.getMonth()+1}月${d.getDate()}日 周${week} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function sameDay(a,b){
+  const da = new Date(a), db = new Date(b);
+  return da.getFullYear()===db.getFullYear() && da.getMonth()===db.getMonth() && da.getDate()===db.getDate();
+}
+function render(){
+  const now = Date.now();
+  const today = [], future = [], other = [];
+  items.slice().sort((a,b)=>a.startTime-b.startTime).forEach(it => {
+    if (it.done) other.push(it);
+    else if (sameDay(it.startTime, now)) today.push(it);
+    else if (it.startTime > now && it.startTime < now + 7*86400000) future.push(it);
+    else other.push(it);
+  });
+  const container = $('list');
+  if (items.length === 0){
+    container.innerHTML = '<div class="card empty">还没有日程，点上面的「+ 添加日程」试试。<br>比如：明天 19:00 社团例会，提前 30 分钟提醒。</div>';
+    return;
+  }
+  container.innerHTML = section('今日', today) + section('未来 7 天', future) + section('已完成 / 其他', other);
+  container.querySelectorAll('[data-done]').forEach(el => el.onclick = () => toggleDone(el.dataset.done));
+  container.querySelectorAll('[data-del]').forEach(el => el.onclick = () => delItem(el.dataset.del));
+}
+function section(title, list){
+  if (list.length === 0) return '';
+  let h = `<div class="section-title">${title}（${list.length}）</div>`;
+  list.forEach(it => {
+    const loc = it.location ? ` · ${esc(it.location)}` : '';
+    const note = it.note ? `<div class="meta">备注：${esc(it.note)}</div>` : '';
+    h += `<div class="item ${it.done?'done':''}">
+      <div class="emoji">${EMOJI[it.category]||'📌'}</div>
+      <div class="body">
+        <div class="title">${esc(it.title)}</div>
+        <div class="meta">${fmt(it.startTime)}${loc}</div>
+        <div class="meta">提前 ${it.remindBefore} 分钟提醒</div>${note}
+      </div>
+      <div class="actions">
+        <button class="btn-ghost btn-sm" data-done="${it.id}">${it.done?'恢复':'完成'}</button>
+        <button class="btn-ghost btn-sm btn-danger" data-del="${it.id}">删除</button>
+      </div></div>`;
+  });
+  return h;
+}
+function addItem(){
+  const title = $('f-title').value.trim();
+  const timeStr = $('f-time').value;
+  const category = $('f-category').value;
+  const remindBefore = parseInt($('f-remind').value, 10);
+  const location = $('f-location').value.trim();
+  const note = $('f-note').value.trim();
+  if (!title) { alert('请填写事项标题'); return; }
+  if (!timeStr) { alert('请选择开始时间'); return; }
+  const startTime = new Date(timeStr).getTime();
+  if (isNaN(startTime)) { alert('时间格式不正确'); return; }
+  if (startTime < Date.now()) { alert('开始时间已经过去了，请选择将来的时间'); return; }
+  items.push({ id: String(Date.now()) + Math.random().toString(16).slice(2,6), title, startTime, category, remindBefore, location, note, done: false, reminded: false });
+  save(); render();
+  $('f-title').value = ''; $('f-location').value = ''; $('f-note').value = '';
+  initDefaultTime();
+  $('addPanel').open = false;
+}
+function toggleDone(id){
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  it.done = !it.done; save(); render();
+}
+function delItem(id){
+  if (!confirm('确定删除这个日程吗？')) return;
+  items = items.filter(x => x.id !== id); save(); render();
+}
+function checkReminders(){
+  const now = Date.now();
+  let changed = false;
+  items.forEach(it => {
+    if (it.done || it.reminded) return;
+    const remindAt = it.startTime - it.remindBefore * 60000;
+    if (now >= remindAt && now <= it.startTime + 60000){
+      it.reminded = true; changed = true; fireAlert(it);
+    }
+  });
+  if (changed) save();
+}
+function fireAlert(it){
+  const t = new Date(it.startTime);
+  const timeText = `${pad(t.getHours())}:${pad(t.getMinutes())}`;
+  const bodyText = `${timeText} 开始${it.location ? ' · ' + it.location : ''}`;
+  showToast(`日程提醒：${it.title}`, bodyText);
+  beep();
+  try {
+    if (window.Notification && Notification.permission === 'granted'){
+      new Notification(`日程提醒：${it.title}`, { body: bodyText, tag: it.id, requireInteraction: true });
+    }
+  } catch(e){}
+}
+function showToast(title, body){
+  const box = document.createElement('div');
+  box.className = 'toast';
+  box.innerHTML = `<div class="t-title">${esc(title)}</div><div class="t-body">${esc(body)}</div><div class="t-close">关闭</div>`;
+  const close = () => box.remove();
+  box.querySelector('.t-close').onclick = close;
+  $('toasts').appendChild(box);
+  setTimeout(close, 20000);
+}
+function beep(){
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    [0, 0.25].forEach((offset, i) => {
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.value = i === 0 ? 880 : 1100;
+      gain.gain.setValueAtTime(0.0001, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + offset + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.22);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + offset); osc.stop(now + offset + 0.25);
+    });
+  } catch(e){}
+}
+async function requestNotify(){
+  if (!window.Notification){ alert('这个浏览器不支持系统通知，页面内提醒仍然可用。'); return; }
+  try {
+    const p = await Notification.requestPermission();
+    updatePermButton();
+    if (p === 'granted') showToast('通知已开启', '切到后台也能收到提醒（页面别关闭）');
+    else if (p === 'denied') alert('你拒绝了通知权限，之后可在浏览器设置里允许本站通知。');
+  } catch(e){
+    alert('当前打开方式不支持系统通知（比如 file:// 直接打开文件）。页面内提醒仍然可用。');
+  }
+}
+function updatePermButton(){
+  const btn = $('btnPerm');
+  if (!window.Notification){ btn.textContent = '通知不可用'; btn.disabled = true; return; }
+  if (Notification.permission === 'granted') btn.textContent = '✓ 通知已开';
+  else if (Notification.permission === 'denied') btn.textContent = '通知被拒';
+  else btn.textContent = '开启通知';
+}
+$('btnAdd').onclick = addItem;
+$('btnTest').onclick = () => {
+  showToast('日程提醒：社团例会', '19:00 开始 · 教学楼 A101');
+  beep();
+  try { if (window.Notification && Notification.permission === 'granted') new Notification('日程提醒：社团例会', { body: '19:00 开始 · 教学楼 A101' }); } catch(e){}
+};
+$('btnPerm').onclick = requestNotify;
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkReminders(); });
+load(); render(); initDefaultTime(); updatePermButton();
+setInterval(checkReminders, 1000); checkReminders();
+</script>
+</body>
+</html>
